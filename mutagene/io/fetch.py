@@ -20,7 +20,12 @@ def download_from_url(url, dst):
     chunk_size = 1024  # 1048576
 
     try:
-        file_size = int(requests.head(url).headers["Content-Length"])
+        req = requests.head(url)
+        if req.status_code != 200:
+            logger.warning("Not able to retrieve data from " + url)
+            sys.exit(1)
+
+        file_size = int(req.headers["Content-Length"])
     except:
         logger.warning("Could not access URL " + url)
         sys.exit(1)
@@ -34,6 +39,10 @@ def download_from_url(url, dst):
     header = {"Range": "bytes=%s-%s" % (first_byte, file_size)}
     try:
         r = requests.get(url, headers=header, stream=True)
+        if req.status_code != 200:
+            logger.warning("Not able to retrieve data from " + url)
+            sys.exit(1)
+
         file_size = int(r.headers['Content-Length'])
     except:
         logger.warning("Could not access URL " + url)
@@ -87,6 +96,6 @@ def fetch_examples():
 
 def fetch_MSKCC(dataset):
     """ Download dataset from cBioPortal https://www.cbioportal.org/datasets """
-    url = "http://download.cbioportal.org/{}.tar.gz".format(dataset)
-    dst = "{}.tar.gz".format(dataset)
+    url = f"https://cbioportal-datahub.s3.amazonaws.com/{dataset}.tar.gz"
+    dst = f"{dataset}.tar.gz"
     download_from_url(url, dst)
